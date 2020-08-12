@@ -2,6 +2,8 @@ const shortid = require("shortid");
 const multer = require("multer");
 const fs = require("fs");
 
+const Links = require("../models/Link");
+
 const MAX_SIZE_USER = 1024 * 1024 * 10;
 const MAX_SIZE_DEFAULT = 1024 * 1024;
 
@@ -36,7 +38,7 @@ exports.uploadFile = async (req, res) => {
             }
         }
     });
-}
+};
 
 exports.deleteFile = async (req, res) => {
     try {
@@ -45,4 +47,29 @@ exports.deleteFile = async (req, res) => {
     } catch (e) {
         console.log(e);
     }
-}
+};
+
+exports.download = async (req, res, next) => {
+    const file = __dirname + "/../uploads/" + req.params.file;
+
+    // Verify that link exists
+    const link = await Links.findOne({name: req.params.file});
+
+    const {name, url, downloads} = link;
+
+    if (downloads > 0) await res.download(file, link.originalName);
+
+    // downloads === 1, delete from db and delete file
+    if (downloads === 1) {
+        // Delete file
+        req.filetodelete = name;
+
+        // Delete file from
+        await Links.findOneAndRemove({url});
+        next();
+    } else {
+        // download > 1, decrease
+        link.downloads--;
+        await link.save();
+    }
+};

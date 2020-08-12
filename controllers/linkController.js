@@ -42,6 +42,17 @@ exports.newLink = async (req, res, next) => {
         return res.json({msg: `${link.url}`})
     } catch (e) {
         console.log(e);
+        return res.status(400).json({msg: "there was an unexpected error."});
+    }
+}
+
+exports.allLinks = async (req, res) => {
+    try {
+        const links = await Links.find({}).select("url -_id");
+        res.json({links});
+    } catch (e) {
+        console.log(e)
+        res.status(400).json({msg: "there was an issue"});
     }
 }
 
@@ -57,23 +68,41 @@ exports.getLink = async (req, res, next) => {
         return res.status(404).json({msg: "The link does not exist"})
     }
 
-    const {name, downloads} = link;
+    const {name, originalName} = link;
 
     // if link exists
-    res.json({file: name});
+    res.json({file: name, originalName});
+}
 
-    // downloads === 1, delete from db and delete file
-    if (downloads === 1) {
-        // Delete file
-        req.filetodelete = name;
+exports.hasPassword = async (req, res, next) => {
+    const {url} = req.params;
 
-        // Delete file from
-        await Links.findOneAndRemove({url});
-        next();
+    // Verify that link exists
+    const link = await Links.findOne({url});
 
-    } else {
-        // download > 1, decrease
-        link.downloads--;
-        await link.save();
+    if (!link) {
+        return res.status(404).json({msg: "The link does not exist"});
     }
+
+    if (link.password) {
+        return res.json({password: true, url: link.url, originalName: link.originalName});
+    }
+
+    next();
+}
+
+exports.validatePassword = async (req, res, next) => {
+    const {url} = req.params;
+    const {password} = req.body;
+
+    const link = await Links.findOne({url});
+
+    if (bcrypt.compareSync(password, link.password)) {
+        next();
+    } else {
+        return res.status(401).json({msg: "Incorrect password"});
+    }
+
+
+
 }

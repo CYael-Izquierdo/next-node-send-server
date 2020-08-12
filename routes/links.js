@@ -16,9 +16,18 @@ router.post("/",
     linkController.newLink
 )
 
+router.get("/",
+    linkController.allLinks
+)
+
 router.get("/:url",
+    linkController.hasPassword,
     linkController.getLink,
-    fileController.deleteFile
+);
+
+router.post("/:url",
+    linkController.validatePassword,
+    linkController.getLink
 );
 
 module.exports = router

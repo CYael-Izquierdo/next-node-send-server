@@ -1,5 +1,6 @@
 const express = require("express");
 const connectDB = require("./config/db");
+const cors = require("cors");
 
 // Create server
 const app = express();
@@ -7,11 +8,20 @@ const app = express();
 // Connect db
 connectDB();
 
+// Enable CORS
+const corsOptions = {
+    origin: process.env.FRONTEND_URL
+}
+app.use(cors(corsOptions));
+
 // App port
 const port = process.env.PORT || 4000;
 
 // Enable read body values
 app.use(express.json());
+
+// Enable public folder
+app.use(express.static("uploads"))
 
 // Routes
 app.use("/api/users", require("./routes/users"));

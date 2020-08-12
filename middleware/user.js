@@ -11,7 +11,6 @@ exports.getAuthUser = (req, res, next) => {
         // verify jwt
         req.user = jwt.verify(token, process.env.SECRET);
     } catch (e) {
-        console.log(e);
         console.log("Invalid JWT");
     }
 

@@ -10,6 +10,11 @@ router.post("/",
     fileController.uploadFile
 );
 
+router.get("/:file",
+    fileController.download,
+    fileController.deleteFile
+);
+
 router.delete("/:id",
     fileController.deleteFile
 );
